@@ -5,7 +5,8 @@
   "source": "src/index.js",
   "scripts": {
     "dev": "parcel watch",
-    "build": "parcel build"
+    "build": "parcel build",
+    "example": "parcel example/index.html --open"
   },
   "repository": {
     "type": "git",
