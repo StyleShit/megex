@@ -98,7 +98,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  group(builder: this) {
+  group(builder: RegexBuilder) {
     this.stack.push({
       type: "group",
       builder,
@@ -107,7 +107,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  groupAs(name: string, builder: this) {
+  groupAs(name: string, builder: RegexBuilder) {
     this.stack.push({
       type: "group",
       builder,
@@ -117,7 +117,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  nonCaptureGroup(builder: this) {
+  nonCaptureGroup(builder: RegexBuilder) {
     this.stack.push({
       type: "group",
       builder,
@@ -185,7 +185,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  charIn(builder: this) {
+  charIn(builder: RegexBuilder) {
     this.stack.push({
       type: "char-in",
       builder,
@@ -194,7 +194,15 @@ export default class RegexBuilder {
     return this;
   }
 
-  charNotIn(builder: this) {
+  charBetween<T extends string | number>(from: T, to: T) {
+    const builder = new RegexBuilder();
+
+    builder.between(from, to);
+
+    return this.charIn(builder);
+  }
+
+  charNotIn(builder: RegexBuilder) {
     this.stack.push({
       type: "char-not-in",
       builder,

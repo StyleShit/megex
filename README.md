@@ -8,13 +8,13 @@ A simple, composable and human-readable regex builder for JavaScript.
 import megex from "megex";
 
 // Simple name pattern.
-const name = megex().charIn(megex().between("a", "z")).atLeast(2);
+const name = megex().charBetween("a", "z").atLeast(2).atMost(10);
 
 // Composing the above pattern into a bigger regex object.
 const regex = megex()
   .startsWith.groupAs("firstName", name)
   .space.groupAs("lastName", name)
-  .ends.build(); // Evaluates to: /^(?<firstName>[a-z]{2,}) (?<lastName>[a-z]{2,})$/
+  .ends.build(); // Evaluates to: /^(?<firstName>[a-z]{2,10}) (?<lastName>[a-z]{2,10})$/
 
 // Executing the regex.
 const match = regex.exec("john doe");

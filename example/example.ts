@@ -4,20 +4,14 @@ console.log("Simple first and last name");
 
 console.log(
   megex()
-    .startsWith.groupAs(
-      "firstName",
-      megex().charIn(megex().between("a", "z").atLeast(2))
-    )
-    .space.groupAs(
-      "lastName",
-      megex().charIn(megex().between("a", "z").atLeast(2))
-    )
+    .startsWith.groupAs("firstName", megex().charBetween("a", "z").atLeast(2))
+    .space.groupAs("lastName", megex().charBetween("a", "z").atLeast(2))
     .ends.build()
 );
 
 console.log("Composed first and last name");
 
-const name = megex().charIn(megex().between("a", "z")).atLeast(2);
+const name = megex().charBetween("a", "z").atLeast(2);
 
 console.log(
   megex()
