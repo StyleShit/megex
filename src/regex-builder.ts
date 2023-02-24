@@ -1,21 +1,23 @@
+import { Modifiers, StackItem } from "./types";
+
 export default class RegexBuilder {
-  stack = [];
-  flags = new Set();
+  private stack: StackItem[] = [];
+  private modifiers = new Set<Modifiers>();
 
   get global() {
-    this.flags.add("g");
+    this.modifiers.add("g");
 
     return this;
   }
 
   get caseInsensitive() {
-    this.flags.add("i");
+    this.modifiers.add("i");
 
     return this;
   }
 
   get multiline() {
-    this.flags.add("m");
+    this.modifiers.add("m");
 
     return this;
   }
@@ -52,7 +54,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  times(min, max) {
+  times(min: number, max?: number) {
     if (max) {
       this.stack.push({
         type: "times-between",
@@ -69,7 +71,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  atLeast(min) {
+  atLeast(min: number) {
     this.stack.push({
       type: "at-least",
       min,
@@ -82,11 +84,11 @@ export default class RegexBuilder {
     return this.atLeast(1);
   }
 
-  atMost(max) {
+  atMost(max: number) {
     return this.times(0, max);
   }
 
-  between(from, to) {
+  between(from: number | string, to: number | string) {
     this.stack.push({
       type: "between",
       from,
@@ -96,7 +98,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  group(builder) {
+  group(builder: this) {
     this.stack.push({
       type: "group",
       builder,
@@ -105,7 +107,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  groupAs(name, builder) {
+  groupAs(name: string, builder: this) {
     this.stack.push({
       type: "group",
       builder,
@@ -115,17 +117,17 @@ export default class RegexBuilder {
     return this;
   }
 
-  semanticGroup(builder) {
+  nonCaptureGroup(builder: this) {
     this.stack.push({
       type: "group",
       builder,
-      semantic: true,
+      capture: false,
     });
 
     return this;
   }
 
-  referenceTo(name) {
+  referenceTo(name: string) {
     this.stack.push({
       type: "reference",
       name,
@@ -158,7 +160,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  exactly(string) {
+  exactly(string: string) {
     this.stack.push({
       type: "exactly",
       string,
@@ -183,7 +185,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  charIn(builder) {
+  charIn(builder: this) {
     this.stack.push({
       type: "char-in",
       builder,
@@ -192,7 +194,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  charNotIn(builder) {
+  charNotIn(builder: this) {
     this.stack.push({
       type: "char-not-in",
       builder,
@@ -265,10 +267,10 @@ export default class RegexBuilder {
         case "group":
           if (item.name) {
             acc += `(?<${item.name}>${item.builder.toString()})`;
-          } else if (item.semantic) {
-            acc += `(?:${item.builder.toString()})`;
-          } else {
+          } else if (item.capture) {
             acc += `(${item.builder.toString()})`;
+          } else {
+            acc += `(?:${item.builder.toString()})`;
           }
           break;
 
@@ -293,13 +295,14 @@ export default class RegexBuilder {
           break;
 
         default:
+          const _: never = item;
           break;
       }
 
       return acc;
     }, "");
 
-    const flags = [...this.flags].reduce((acc, m) => acc + m, "");
+    const flags = [...this.modifiers].reduce((acc, m) => acc + m, "");
 
     return new RegExp(pattern, flags);
   }

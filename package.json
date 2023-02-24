@@ -2,7 +2,7 @@
   "name": "megex",
   "version": "0.0.1",
   "main": "dist/index.js",
-  "source": "src/index.js",
+  "source": "src/index.ts",
   "scripts": {
     "dev": "parcel watch",
     "build": "parcel build",

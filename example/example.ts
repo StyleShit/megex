@@ -40,7 +40,7 @@ console.log(
     )
     .exactly("test_\\w\\s-")
     .referenceTo("first")
-    .semanticGroup(
+    .nonCaptureGroup(
       megex()
         .digit.atMost(5)
         .any.times(3)
