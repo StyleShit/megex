@@ -1,45 +1,61 @@
-import megex from "../src";
+import m from "../src";
 
 console.log("Simple first and last name");
 
 console.log(
-  megex()
-    .startsWith.groupAs("firstName", megex().charBetween("a", "z").atLeast(2))
-    .space.groupAs("lastName", megex().charBetween("a", "z").atLeast(2))
+  m()
+    .startsWith.group(m().charBetween("a", "z").atLeast(2), "firstName")
+    .space.group(m().charBetween("a", "z").atLeast(2), "lastName")
     .ends.build()
 );
 
 console.log("Composed first and last name");
 
-const name = megex().charBetween("a", "z").atLeast(2);
+const name = m().charBetween("a", "z").atLeast(2);
 
 console.log(
-  megex()
-    .startsWith.groupAs("firstName", name)
-    .space.groupAs("lastName", name)
+  m()
+    .startsWith.group(name, "firstName")
+    .space.group(name, "lastName")
+    .ends.build()
+);
+
+console.log("Simple email");
+
+console.log(
+  m()
+    .startsWith.group(m().word.atLeastOnce, "username")
+    .exactly("@")
+    .group(m().word.atLeastOnce, "domain")
+    .exactly(".")
+    .group(m().word.atLeastOnce, "tld")
     .ends.build()
 );
 
 console.log("Doesn't make sense but stretches the limits");
 
 console.log(
-  megex()
-    .global.caseInsensitive.multiline.groupAs(
-      "first",
-      megex().startsWith.digit.times(3)
+  m()
+    .exactly("test")
+    .newline.anyBut("asd", "zxc", "qwe")
+    .digit.atLeastOnce.ends.build()
+);
+
+console.log(
+  m()
+    .global.caseInsensitive.multiline.group(
+      m().startsWith.digit.times(3),
+      "first"
     )
-    .or.groupAs(
-      "second",
-      megex().word.times(1, 10).digit.charNotIn(megex().digit).ends
-    )
+    .or.group(m().word.times(1, 10).digit.anyNotIn(m().digit).ends, "second")
     .exactly("test_\\w\\s-")
     .referenceTo("first")
     .nonCaptureGroup(
-      megex()
+      m()
         .digit.atMost(5)
         .any.times(3)
-        .charIn(megex().digit.word.space)
-        .charNotIn(megex().between("s", "u"))
+        .anyIn(m().digit.word.space)
+        .anyNotIn(m().range("s", "u"))
         .times(5)
     )
     .optional.build()

@@ -84,13 +84,17 @@ export default class RegexBuilder {
     return this.atLeast(1);
   }
 
+  get zeroOrMore() {
+    return this.atLeast(0);
+  }
+
   atMost(max: number) {
     return this.times(0, max);
   }
 
-  between(from: number | string, to: number | string) {
+  range(from: number | string, to: number | string) {
     this.stack.push({
-      type: "between",
+      type: "range",
       from,
       to,
     });
@@ -98,16 +102,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  group(builder: RegexBuilder) {
-    this.stack.push({
-      type: "group",
-      builder,
-    });
-
-    return this;
-  }
-
-  groupAs(name: string, builder: RegexBuilder) {
+  group(builder: RegexBuilder, name?: string) {
     this.stack.push({
       type: "group",
       builder,
@@ -185,9 +180,17 @@ export default class RegexBuilder {
     return this;
   }
 
-  charIn(builder: RegexBuilder) {
+  get newline() {
     this.stack.push({
-      type: "char-in",
+      type: "newline",
+    });
+
+    return this;
+  }
+
+  anyIn(builder: RegexBuilder) {
+    this.stack.push({
+      type: "any-in",
       builder,
     });
 
@@ -197,50 +200,57 @@ export default class RegexBuilder {
   charBetween<T extends string | number>(from: T, to: T) {
     const builder = new RegexBuilder();
 
-    builder.between(from, to);
+    builder.range(from, to);
 
-    return this.charIn(builder);
+    return this.anyIn(builder);
   }
 
-  charNotIn(builder: RegexBuilder) {
+  anyNotIn(builder: RegexBuilder) {
     this.stack.push({
-      type: "char-not-in",
+      type: "any-not-in",
       builder,
     });
 
     return this;
   }
 
-  anyOf(...strings: string[]) {
-    const builder = new RegexBuilder();
+  oneOf(...strings: string[]) {
+    const builder = new RegexBuilder().exactly(strings[0]);
 
-    strings.forEach((string, index) => {
-      if (index > 0) {
-        builder.or;
-      }
-
-      builder.exactly(string);
+    strings.slice(1).forEach((string) => {
+      builder.or.exactly(string);
     });
 
-    return this.charIn(builder);
+    return this.nonCaptureGroup(builder);
   }
 
-  noneOf(...strings: string[]) {
-    const builder = new RegexBuilder();
+  anyBut(...strings: string[]) {
+    const builder = new RegexBuilder().exactly(strings[0]);
 
-    strings.forEach((string, index) => {
-      if (index > 0) {
-        builder.or;
-      }
-
-      builder.exactly(string);
+    strings.slice(1).forEach((string) => {
+      builder.or.exactly(string);
     });
 
-    return this.charNotIn(builder);
+    return this.nonCaptureGroup(
+      new RegexBuilder().negativeLookahead(builder).any.zeroOrMore
+    );
+  }
+
+  negativeLookahead(builder: RegexBuilder) {
+    this.stack.push({
+      type: "negative-lookahead",
+      builder,
+    });
+
+    return this;
   }
 
   toString() {
     return this.build().source;
+  }
+
+  private escape(string: string) {
+    return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
   }
 
   build() {
@@ -270,16 +280,22 @@ export default class RegexBuilder {
           acc += "\\s";
           break;
 
+        case "newline":
+          acc += "\\n";
+          break;
+
         case "optional":
           acc += "?";
           break;
 
-        case "between":
+        case "range":
           acc += `${item.from}-${item.to}`;
           break;
 
         case "at-least":
-          if (item.min === 1) {
+          if (item.min === 0) {
+            acc += "*";
+          } else if (item.min === 1) {
             acc += "+";
           } else {
             acc += `{${item.min},}`;
@@ -295,9 +311,7 @@ export default class RegexBuilder {
           break;
 
         case "exactly":
-          const escaped = item.string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
-
-          acc += escaped;
+          acc += this.escape(item.string);
           break;
 
         case "group":
@@ -310,11 +324,11 @@ export default class RegexBuilder {
           }
           break;
 
-        case "char-in":
+        case "any-in":
           acc += `[${item.builder.toString()}]`;
           break;
 
-        case "char-not-in":
+        case "any-not-in":
           acc += `[^${item.builder.toString()}]`;
           break;
 
@@ -330,6 +344,10 @@ export default class RegexBuilder {
           acc += ".";
           break;
 
+        case "negative-lookahead":
+          acc += `(?!${item.builder.toString()})`;
+          break;
+
         default:
           const _: never = item;
           break;
@@ -338,7 +356,7 @@ export default class RegexBuilder {
       return acc;
     }, "");
 
-    const flags = [...this.modifiers].reduce((acc, m) => acc + m, "");
+    const flags = [...this.modifiers].join("");
 
     return new RegExp(pattern, flags);
   }
