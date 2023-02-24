@@ -211,6 +211,34 @@ export default class RegexBuilder {
     return this;
   }
 
+  anyOf(...strings: string[]) {
+    const builder = new RegexBuilder();
+
+    strings.forEach((string, index) => {
+      if (index > 0) {
+        builder.or;
+      }
+
+      builder.exactly(string);
+    });
+
+    return this.charIn(builder);
+  }
+
+  noneOf(...strings: string[]) {
+    const builder = new RegexBuilder();
+
+    strings.forEach((string, index) => {
+      if (index > 0) {
+        builder.or;
+      }
+
+      builder.exactly(string);
+    });
+
+    return this.charNotIn(builder);
+  }
+
   toString() {
     return this.build().source;
   }
