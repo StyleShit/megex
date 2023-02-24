@@ -12,12 +12,9 @@ const name = megex().charIn(megex().between("a", "z")).atLeast(2);
 
 // Composing the above pattern into a bigger regex object.
 const regex = megex()
-  .startsWith()
-  .groupAs("firstName", name)
-  .space()
-  .groupAs("lastName", name)
-  .ends()
-  .build(); // Evaluates to: /^(?<firstName>[a-z]{2,})\s(?<lastName>[a-z]{2,})$/
+  .startsWith.groupAs("firstName", name)
+  .space.groupAs("lastName", name)
+  .ends.build(); // Evaluates to: /^(?<firstName>[a-z]{2,}) (?<lastName>[a-z]{2,})$/
 
 // Executing the regex.
 const match = regex.exec("john doe");
@@ -31,7 +28,6 @@ console.log(match.groups.lastName); // doe
 - [ ] Improve the API
   - [ ] Add more methods
   - [ ] Try to find a more fluent API
-  - [ ] Maybe use getters instead of methods when there are no parameters
 - [ ] Add tests
 - [ ] Use TypeScript
 - [ ] Add more examples

@@ -2,25 +2,25 @@ export default class RegexBuilder {
   stack = [];
   flags = new Set();
 
-  global() {
+  get global() {
     this.flags.add("g");
 
     return this;
   }
 
-  caseInsensitive() {
+  get caseInsensitive() {
     this.flags.add("i");
 
     return this;
   }
 
-  multiline() {
+  get multiline() {
     this.flags.add("m");
 
     return this;
   }
 
-  startsWith() {
+  get startsWith() {
     this.stack.push({
       type: "starts-with",
     });
@@ -28,7 +28,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  ends() {
+  get ends() {
     this.stack.push({
       type: "ends",
     });
@@ -36,7 +36,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  digit() {
+  get digit() {
     this.stack.push({
       type: "digit",
     });
@@ -44,9 +44,9 @@ export default class RegexBuilder {
     return this;
   }
 
-  char() {
+  get word() {
     this.stack.push({
-      type: "char",
+      type: "word",
     });
 
     return this;
@@ -78,7 +78,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  atLeastOnce() {
+  get atLeastOnce() {
     return this.atLeast(1);
   }
 
@@ -134,7 +134,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  or() {
+  get or() {
     this.stack.push({
       type: "or",
     });
@@ -142,7 +142,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  any() {
+  get any() {
     this.stack.push({
       type: "any",
     });
@@ -150,7 +150,7 @@ export default class RegexBuilder {
     return this;
   }
 
-  optional() {
+  get optional() {
     this.stack.push({
       type: "optional",
     });
@@ -167,9 +167,17 @@ export default class RegexBuilder {
     return this;
   }
 
-  space() {
+  get space() {
     this.stack.push({
       type: "space",
+    });
+
+    return this;
+  }
+
+  get whitespace() {
+    this.stack.push({
+      type: "whitespace",
     });
 
     return this;
@@ -212,11 +220,15 @@ export default class RegexBuilder {
           acc += "\\d";
           break;
 
-        case "char":
+        case "word":
           acc += "\\w";
           break;
 
         case "space":
+          acc += " ";
+          break;
+
+        case "whitespace":
           acc += "\\s";
           break;
 
